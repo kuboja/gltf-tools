@@ -1,0 +1,7 @@
+numpy==1.26.4
+pillow==11.0.0
+pyglet==1.5.29
+pygltflib==1.16.2
+pyrender==0.1.45
+scipy==1.14.1
+trimesh==4.5.2
