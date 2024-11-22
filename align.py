@@ -1,23 +1,18 @@
 from pygltflib import GLTF2
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import trimesh
-import pyrender
 
 def get_bbox(glb_path):
 
     # Načtení GLB modelu pomocí trimesh bez textur
     scene_or_mesh = trimesh.load(glb_path, skip_materials=True, process=False)
-    # scene_or_mesh.show()
 
     # Pokud je načtený objekt scénou, extrahujeme hlavní mesh s transformacemi
     if isinstance(scene_or_mesh, trimesh.Scene):
         scene_or_mesh = scene_or_mesh.dump(concatenate=True)
 
-    mesh = pyrender.Mesh.from_trimesh(scene_or_mesh)#, material=material)
-
     # Výpočet bounding boxu a nastavení kamery tak, aby objekt fitnul do záběru
-    bounding_box = mesh.bounds
+    bounding_box = scene_or_mesh.bounding_box.bounds
 
     print(np.round(bounding_box, 2))
 
@@ -29,7 +24,7 @@ def align_glb_to_center(input_path, output_path = None, align_to = [0, 0, 0]):
     gltf = GLTF2().load(input_path)
 
     # check is geometry is present
-    if len(gltf.scenes[0].nodes) == 0 or gltf.scenes[0].nodes[0] is None or any([gltf.nodes[node].mesh is None for node in gltf.scenes[0].nodes]):
+    if len(gltf.scenes[0].nodes) == 0 or gltf.scenes[0].nodes[0] is None or not any([node.mesh is not None for node in gltf.nodes]):
         print(f"No geometry found in the GLB file '{input_path}'.")
         return
 
@@ -39,23 +34,29 @@ def align_glb_to_center(input_path, output_path = None, align_to = [0, 0, 0]):
     center = (bbox[0] + bbox[1]) / 2
 
     size = bbox[1] - bbox[0]
-    print("Size: ")
-    print(size)
+    print("Size: " + str(np.round(size,4)))
+
+    # Uložit size do souboru
+    with open(input_path.replace(".glb", "_size.txt"), "w") as f:
+        f.writelines("Size: ")
+        f.writelines(str(size))
+        f.writelines("Align to: ")
+        f.writelines(str(align_to))
 
     if align_to[0] == 1:
-        center[0] = bbox[1][0]
-    elif align_to[0] == -1:
         center[0] = bbox[0][0]
+    elif align_to[0] == -1:
+        center[0] = bbox[1][0]
 
     if align_to[1] == 1:
-        center[1] = bbox[1][1]
-    elif align_to[1] == -1:
         center[1] = bbox[0][1]
+    elif align_to[1] == -1:
+        center[1] = bbox[1][1]
 
     if align_to[2] == 1:
-        center[2] = bbox[1][2]
-    elif align_to[2] == -1:
         center[2] = bbox[0][2]
+    elif align_to[2] == -1:
+        center[2] = bbox[1][2]
 
     # Aktualizace transformace root uzlu pro zarovnání do počátku
     root_node = gltf.nodes[gltf.scenes[0].nodes[0]]
@@ -83,7 +84,7 @@ def align_glb_to_center(input_path, output_path = None, align_to = [0, 0, 0]):
 
 if __name__ == "__main__":
     align_glb_to_center(
-        "..\\ExteriorPlanters_10102024_01\\ExteriorPlanters_10102024_01_level1-7554_optimized.glb",
+        "..\\ExteriorPlanters_10102024_01\\ExteriorPlanters_10102024_01_level1-3180_optimized.glb",
         None,
         [0, -1, 0]
     )

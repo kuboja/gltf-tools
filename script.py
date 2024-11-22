@@ -35,15 +35,15 @@ def run():
 
     # name = "ExteriorAccessories_10152024_01"
     name = "ExteriorPlanters_10102024_01"
-    name = "Lighting_10102024_01"
-    name = "Materials_10152024_01"
-    name = "Porches_10102024_01"
-    name = "RegularDoors_10152024_01"
-    name = "Sconces_10102024_01"
-    name = "Windows_10152024_01"
-    name = "FrontADD_10102024_01"
-    name = "LargeDoors_10152024_01"
-    name = "LargeGlass_10152024_01"
+    # name = "Lighting_10102024_01"
+    # name = "Materials_10152024_01"
+    # name = "Porches_10102024_01"
+    # name = "RegularDoors_10152024_01"
+    # name = "Sconces_10102024_01"
+    # name = "Windows_10152024_01"
+    # name = "FrontADD_10102024_01"
+    # name = "LargeDoors_10152024_01"
+    # name = "LargeGlass_10152024_01"
 
     glb_path = os.path.join(basePath, name + ".glb")
 
