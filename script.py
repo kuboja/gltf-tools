@@ -58,8 +58,8 @@ if __name__ == "__main__":
     
 
     names = [
-        # "ExteriorAccessories_10152024_01",
-        # "ExteriorPlanters_10102024_01",
+        "ExteriorAccessories_10152024_01",
+        "ExteriorPlanters_10102024_01",
         "Lighting_10102024_01",
         "Materials_10152024_01",
         "Porches_10102024_01",

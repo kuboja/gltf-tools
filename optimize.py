@@ -158,7 +158,7 @@ def clean_gltf(gltf):
         if material.occlusionTexture:
             used_textures.add(material.occlusionTexture.index)
         
-        if material.extensions['KHR_materials_pbrSpecularGlossiness']:
+        if material.extensions.get('KHR_materials_pbrSpecularGlossiness'):
             pbr = material.extensions['KHR_materials_pbrSpecularGlossiness']
             if pbr.get('diffuseTexture'):
                 used_textures.add(pbr['diffuseTexture']['index'])
@@ -224,7 +224,7 @@ def clean_gltf(gltf):
         if material.occlusionTexture:
             material.occlusionTexture.index = texture_map[material.occlusionTexture.index]
 
-        if material.extensions['KHR_materials_pbrSpecularGlossiness']:
+        if material.extensions.get('KHR_materials_pbrSpecularGlossiness'):
             pbr = material.extensions['KHR_materials_pbrSpecularGlossiness']
             if pbr.get('diffuseTexture'):
                 pbr['diffuseTexture']['index'] = texture_map[pbr['diffuseTexture']['index']]
@@ -244,11 +244,18 @@ def clean_gltf(gltf):
             texture.source = image_map[texture.source]
 
 
-def convert_images_to_webp(gltf):
+def convert_images_to_webp(gltf, min_size_kb=50):
     """
     Konvertuje obrázky v GLTF souboru do formátu WebP a uloží je jako binární data v _glb_data.
+    Obrázky se konvertují pouze, pokud jejich velikost přesahuje zadaný práh (v kB).
+
+    :param gltf: GLTF objekt obsahující obrázky.
+    :param min_size_kb: Minimální velikost obrázku (v kB) pro konverzi.
     """
-    new_buffer_data = bytearray(gltf._glb_data)  # Vytvoření kopie původních binárních dat
+    # new_buffer_data = bytearray(gltf._glb_data)  # Vytvoření kopie původních binárních dat
+
+    # Pro každý buffer vytvoříme kopii dat
+    buffer_data = [bytearray(buffer.data) for buffer in gltf.buffers]
 
     for image in gltf.images:
         if image.mimeType == "image/webp":
@@ -257,8 +264,15 @@ def convert_images_to_webp(gltf):
 
         if image.bufferView is not None:
             buffer_view = gltf.bufferViews[image.bufferView]
+            buffer_index = buffer_view.buffer
             start = buffer_view.byteOffset or 0
             end = start + buffer_view.byteLength
+
+            # Podmínka pro minimální velikost obrázku
+            if buffer_view.byteLength < min_size_kb * 1024:
+                # Pokud je obrázek menší než daný práh, přeskočíme ho
+                continue
+
             image_data = io.BytesIO(new_buffer_data[start:end])
 
             # Načtení obrázku pomocí PIL
@@ -284,19 +298,122 @@ def convert_images_to_webp(gltf):
     # Aktualizace GLB dat s novými obrázky
     gltf._glb_data = new_buffer_data
 
+def resize_images_in_gltf(gltf: GLTF2, max_width: float = 1024, max_height: float = 1024):
+    """
+    Zmenší obrázky v GLTF souboru na dané maximální rozlišení a uloží je jako binární data v _glb_data.
+
+    :param gltf: GLTF objekt obsahující obrázky.
+    :param max_width: Maximální šířka obrázku.
+    :param max_height: Maximální výška obrázku.
+    """
+    new_buffer_data = bytearray(gltf._glb_data)  # Vytvoření kopie původních binárních dat
+
+    for image in gltf.images:
+        if image.bufferView is not None:
+            buffer_view = gltf.bufferViews[image.bufferView]
+            start = buffer_view.byteOffset or 0
+            end = start + buffer_view.byteLength
+            image_data = io.BytesIO(new_buffer_data[start:end])
+
+            # Načtení obrázku pomocí PIL
+            img = Image.open(image_data)
+
+            # Změna velikosti obrázku, pokud přesahuje maximální rozměry
+            if img.width > max_width or img.height > max_height:
+                img.thumbnail((max_width, max_height))
+
+                # Uložení změněného obrázku
+                output = io.BytesIO()
+                img_format = img.format or "PNG"  # Zachování původního formátu, pokud je známý
+                img.save(output, format=img_format, quality=85)
+                output.seek(0)
+
+                # Aktualizace buffer view s novými daty
+                new_image_data = output.read()
+                new_offset = len(new_buffer_data)
+                new_buffer_data.extend(new_image_data)
+
+                buffer_view.byteOffset = new_offset
+                buffer_view.byteLength = len(new_image_data)
+                buffer_view.buffer = 0  # Předpokládáme použití prvního bufferu
+
+    # Aktualizace GLB dat s novými obrázky
+    gltf._glb_data = new_buffer_data
+
+def process_images_in_gltf(gltf: GLTF2, max_width: float = 1024, max_height: float = 1024, min_size_kb: float = 50, quality: int = 85):
+    """
+    Převádí obrázky v GLTF souboru na formát WebP a zmenšuje je na zadané maximální rozměry.
+    Obrázky se zpracovávají pouze, pokud jejich velikost přesahuje zadaný práh (v kB).
+
+    :param gltf: GLTF objekt obsahující obrázky.
+    :param max_width: Maximální šířka obrázku.
+    :param max_height: Maximální výška obrázku.
+    :param min_size_kb: Minimální velikost obrázku (v kB) pro zpracování.
+    """
+    new_buffer_data = bytearray(gltf._glb_data)  # Vytvoření kopie původních binárních dat
+
+    for image in gltf.images:
+        if image.bufferView is not None:
+            buffer_view = gltf.bufferViews[image.bufferView]
+            start = buffer_view.byteOffset or 0
+            end = start + buffer_view.byteLength
+
+            # Podmínka pro minimální velikost obrázku
+            if buffer_view.byteLength < min_size_kb * 1024:
+                # pokud je obrázek menší než daný práh, přeskočíme ho
+                continue
+
+            image_data = io.BytesIO(new_buffer_data[start:end])
+
+            # Načtení obrázku pomocí PIL
+            img = Image.open(image_data)
+
+            doResize = img.width > max_width or img.height > max_height
+
+            if not doResize and image.mimeType == "image/webp":
+                # pokud není třeba zmenšovat a obrázek je již ve formátu WebP, přeskočíme ho 
+                continue
+
+            # Změna velikosti obrázku, pokud přesahuje maximální rozměry
+            if doResize:
+                img.thumbnail((max_width, max_height))  # Zmenšení obrázku
+
+            # Konverze obrázku do WebP
+            output = io.BytesIO()
+            img.save(output, format="WEBP", quality=quality)
+            output.seek(0)
+
+            # Aktualizace buffer view s novými daty
+            new_image_data = output.read()
+            new_offset = len(new_buffer_data)
+            new_buffer_data.extend(new_image_data)
+
+            buffer_view.byteOffset = new_offset
+            buffer_view.byteLength = len(new_image_data)
+            buffer_view.buffer = 0  # Předpokládáme použití prvního bufferu
+
+            # Aktualizace MIME typu na image/webp
+            image.mimeType = "image/webp"
+
+    # Aktualizace GLB dat s novými obrázky
+    gltf._glb_data = new_buffer_data
+
 if __name__ == "__main__":
 
-    path = r"D:\femcad\Venly\GLB\Lighting_10102024_01\Lighting_10102024_01_level1-4534.glb"
+    path = r"D:\femcad\Venly\GLB\Sconces_10102024_01\Sconces_10102024_01_level1-31_optimized.glb"
 
     # Načtení GLB souboru
     gltf = GLTF2().load(path)
 
-    # Optimalizace GLTF souboru
     # remove_empty_nodes(gltf)
 
-    clean_gltf(gltf)
+    # clean_gltf(gltf)
 
     # optimize_buffers(gltf)
+
+    resize_images_in_gltf(gltf)
+
+    # convert_images_to_webp(gltf)
 
     # Uložení GLB souboru
     gltf.save(path.replace('.glb', '_cleaned.glb'))
