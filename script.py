@@ -3,7 +3,7 @@ import os
 from scipy.spatial.transform import Rotation as R
 from glb_thumbnail_generator import call_thumbnail_generator
 from align import align_glb_to_center
-from optimize import clean_gltf, convert_images_to_webp, optimize_buffers, remove_empty_nodes
+from optimize import clean_gltf, process_images_in_gltf, optimize_buffers, remove_empty_nodes
 from split import split_glb_by_root_nodes
 
 
@@ -20,7 +20,7 @@ def optimalize(path):
 
     optimize_buffers(gltf)
 
-    convert_images_to_webp(gltf)
+    process_images_in_gltf(gltf)
 
     new_path = path.replace('.glb', '_optimized.glb')
     gltf.save(new_path)
