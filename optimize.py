@@ -1,4 +1,4 @@
-from pygltflib import GLTF2, Buffer
+from pygltflib import GLTF2, Buffer, Material
 from scipy.spatial.transform import Rotation as R
 from PIL import Image
 import io
@@ -150,7 +150,21 @@ def clean_gltf(gltf):
     # Shromáždění použitých textur z použitých materiálů
     used_textures = set()
     for material_index in used_materials:
-        material = gltf.materials[material_index]
+        material: Material = gltf.materials[material_index]
+        if material.emissiveTexture:
+            used_textures.add(material.emissiveTexture.index)
+        if material.normalTexture:
+            used_textures.add(material.normalTexture.index)
+        if material.occlusionTexture:
+            used_textures.add(material.occlusionTexture.index)
+        
+        if material.extensions['KHR_materials_pbrSpecularGlossiness']:
+            pbr = material.extensions['KHR_materials_pbrSpecularGlossiness']
+            if pbr.get('diffuseTexture'):
+                used_textures.add(pbr['diffuseTexture']['index'])
+            if pbr.get('specularGlossinessTexture'):
+                used_textures.add(pbr['specularGlossinessTexture']['index'])
+
         if material.pbrMetallicRoughness:
             pbr = material.pbrMetallicRoughness
             if pbr.baseColorTexture:
@@ -202,6 +216,21 @@ def clean_gltf(gltf):
 
     # Aktualizace referencí v materiálech
     for material in gltf.materials:
+
+        if material.emissiveTexture:
+            material.emissiveTexture.index = texture_map[material.emissiveTexture.index]
+        if material.normalTexture:
+            material.normalTexture.index = texture_map[material.normalTexture.index]
+        if material.occlusionTexture:
+            material.occlusionTexture.index = texture_map[material.occlusionTexture.index]
+
+        if material.extensions['KHR_materials_pbrSpecularGlossiness']:
+            pbr = material.extensions['KHR_materials_pbrSpecularGlossiness']
+            if pbr.get('diffuseTexture'):
+                pbr['diffuseTexture']['index'] = texture_map[pbr['diffuseTexture']['index']]
+            if pbr.get('specularGlossinessTexture'):
+                pbr['specularGlossinessTexture']['index'] = texture_map[pbr['specularGlossinessTexture']['index']]
+
         if material.pbrMetallicRoughness:
             pbr = material.pbrMetallicRoughness
             if pbr.baseColorTexture:
@@ -257,15 +286,17 @@ def convert_images_to_webp(gltf):
 
 if __name__ == "__main__":
 
+    path = r"D:\femcad\Venly\GLB\Lighting_10102024_01\Lighting_10102024_01_level1-4534.glb"
+
     # Načtení GLB souboru
-    gltf = GLTF2().load('..\\ExteriorPlanters_10102024_01\\ExteriorPlanters_10102024_01_level1-2141.glb')
+    gltf = GLTF2().load(path)
 
     # Optimalizace GLTF souboru
-    remove_empty_nodes(gltf)
+    # remove_empty_nodes(gltf)
 
     clean_gltf(gltf)
 
-    optimize_buffers(gltf)
+    # optimize_buffers(gltf)
 
     # Uložení GLB souboru
-    gltf.save(r"..\ExteriorPlanters_10102024_01\ExteriorPlanters_10102024_01_level1-2141_test.glb")
+    gltf.save(path.replace('.glb', '_cleaned.glb'))

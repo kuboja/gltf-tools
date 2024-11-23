@@ -28,22 +28,10 @@ def optimalize(path):
     return new_path
 
 
-def run():
+def runName(name):
 
     # Příklad použití
     basePath = "..\\"
-
-    # name = "ExteriorAccessories_10152024_01"
-    name = "ExteriorPlanters_10102024_01"
-    # name = "Lighting_10102024_01"
-    # name = "Materials_10152024_01"
-    # name = "Porches_10102024_01"
-    # name = "RegularDoors_10152024_01"
-    # name = "Sconces_10102024_01"
-    # name = "Windows_10152024_01"
-    # name = "FrontADD_10102024_01"
-    # name = "LargeDoors_10152024_01"
-    # name = "LargeGlass_10152024_01"
 
     glb_path = os.path.join(basePath, name + ".glb")
 
@@ -67,5 +55,22 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    
+
+    names = [
+        # "ExteriorAccessories_10152024_01",
+        # "ExteriorPlanters_10102024_01",
+        "Lighting_10102024_01",
+        "Materials_10152024_01",
+        "Porches_10102024_01",
+        "RegularDoors_10152024_01",
+        "Sconces_10102024_01",
+        "Windows_10152024_01",
+        "FrontADD_10102024_01",
+        "LargeDoors_10152024_01",
+        "LargeGlass_10152024_01"
+    ]
+
+    for name in names:
+        runName(name)
 
