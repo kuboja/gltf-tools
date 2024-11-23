@@ -14,7 +14,7 @@ def get_bbox(glb_path):
     # Výpočet bounding boxu a nastavení kamery tak, aby objekt fitnul do záběru
     bounding_box = scene_or_mesh.bounding_box.bounds
 
-    print(np.round(bounding_box, 2))
+    # print(np.round(bounding_box, 2))
 
     return bounding_box
 
@@ -38,10 +38,13 @@ def align_glb_to_center(input_path, output_path = None, align_to = [0, 0, 0]):
 
     # Uložit size do souboru
     with open(input_path.replace(".glb", "_size.txt"), "w") as f:
-        f.writelines("Size: ")
-        f.writelines(str(size))
-        f.writelines("Align to: ")
-        f.writelines(str(align_to))
+        f.writelines([
+            "Size:     ",
+            str(size),
+            "\n",
+            "Align to: ",
+            str(align_to)
+        ])
 
     if align_to[0] == 1:
         center[0] = bbox[0][0]
