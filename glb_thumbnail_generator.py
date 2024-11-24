@@ -97,6 +97,8 @@ def call_thumbnail_generator(glb_path, output_path, width=400, height=300):
 
     print(result.stdout)
 
+    return output_path
+
 if __name__ == "__main__":
 
     if len(sys.argv) < 2:
