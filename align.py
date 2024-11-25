@@ -2,6 +2,8 @@ from pygltflib import GLTF2
 import numpy as np
 import trimesh
 
+from split import trs_to_matrix
+
 def get_bbox(glb_path):
 
     # Načtení GLB modelu pomocí trimesh bez textur
@@ -61,20 +63,18 @@ def align_glb_to_center(input_path, output_path = None, align_to = [0, 0, 0]):
     elif align_to[2] == -1:
         center[2] = bbox[1][2]
 
+    global_transformation = trs_to_matrix(translation=-center)
+
     # Aktualizace transformace root uzlu pro zarovnání do počátku
-    root_node = gltf.nodes[gltf.scenes[0].nodes[0]]
-    if root_node.matrix is not None:
-        # Pokud existuje aktuální transformační matice, sloučíme ji s novou translací
-        current_transform = np.transpose(np.array(root_node.matrix).reshape(4, 4))
-        current_transform[:3, 3] = current_transform[:3, 3] - center
-        root_node.matrix = np.transpose(current_transform).flatten().tolist()
-    else:
-        if root_node.translation is None:
-            root_node.translation = [-center[0], -center[1], -center[2]]
-        else:
-            root_node.translation[0] -= center[0]
-            root_node.translation[1] -= center[1]
-            root_node.translation[2] -= center[2]
+    for node_index in gltf.scenes[0].nodes:
+        node = gltf.nodes[node_index]
+        current_matrix = np.transpose(np.array(node.matrix).reshape(4, 4)) if node.matrix else trs_to_matrix(
+            node.translation or [0, 0, 0],
+            node.rotation or [0, 0, 0, 1],
+            node.scale or [1, 1, 1],
+        )
+        transformed = np.dot(global_transformation, current_matrix)
+        node.matrix = np.transpose(transformed).flatten().tolist()
 
     # Uložení zarovnaného GLB souboru
     if output_path is None:
