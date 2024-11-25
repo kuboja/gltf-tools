@@ -5,17 +5,20 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 
-def trs_to_matrix(translation, rotation, scale):
+def trs_to_matrix(translation, rotation = None, scale = None):
     """Převede translation, rotation, scale na transformační matici"""
     matrix = np.identity(4)
     # Přidání měřítka
-    scale_matrix = np.diag(scale + [1])
-    matrix = np.dot(matrix, scale_matrix)
+    if scale is not None:
+        scale_matrix = np.diag(scale + [1])
+        matrix = np.dot(matrix, scale_matrix)
     # Přidání rotace (kvaternion na rotační matici)
-    rotation_matrix = R.from_quat(rotation).as_matrix()
-    matrix[:3, :3] = np.dot(matrix[:3, :3], rotation_matrix)
+    if rotation is not None:
+        rotation_matrix = R.from_quat(rotation).as_matrix()
+        matrix[:3, :3] = np.dot(matrix[:3, :3], rotation_matrix)
     # Přidání posunu
-    matrix[:3, 3] = translation
+    if translation is not None:
+        matrix[:3, 3] = translation
     return matrix
 
 def combine_transforms(parent: Node, child: Node):
@@ -84,7 +87,8 @@ def filter_nodes_from_root(gltf: GLTF2, node_index, output_dir, output_filename)
     # Aktualizace transformace child uzlu
     for index in new_scene_nodes:
         child_node = new_gltf.nodes[index_map[index]]
-        child_node.matrix = combine_transforms(root_node, child_node)
+        transformation_matrix = combine_transforms(root_node, child_node)
+        child_node.matrix = transformation_matrix
         child_node.translation, child_node.rotation, child_node.scale = None, None, None
 
     # Aktualizace root uzlů scény
