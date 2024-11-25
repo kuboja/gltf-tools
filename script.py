@@ -1,5 +1,6 @@
 from pygltflib import GLTF2
 import os
+from attributes import remove_normals
 from glb_thumbnail_generator import call_thumbnail_generator
 from align import align_glb_to_center
 from optimize import clean_gltf, optimize_buffers, remove_empty_nodes
@@ -22,6 +23,8 @@ def clean(path):
     optimize_buffers(gltf)
 
     # process_images_in_gltf(gltf)
+
+    remove_normals(gltf)
 
     new_path = path.replace('.glb', '_clean.glb')
     gltf.save(new_path)
@@ -101,17 +104,17 @@ if __name__ == "__main__":
     
 
     names = [
-        # "ExteriorAccessories_10152024_01",
-        # "ExteriorPlanters_10102024_01",
-        # "Lighting_10102024_01",
-        # "Materials_10152024_01",
-        # "Porches_10102024_01",
+        "ExteriorAccessories_10152024_01",
+        "ExteriorPlanters_10102024_01",
+        "Lighting_10102024_01",
+        "Materials_10152024_01",
+        "Porches_10102024_01",
         "RegularDoors_10152024_01",
-        # "Sconces_10102024_01",
-        # "Windows_10152024_01",
-        # "FrontADD_10102024_01",
-        # "LargeDoors_10152024_01",
-        # "LargeGlass_10152024_01"
+        "Sconces_10102024_01",
+        "Windows_10152024_01",
+        "FrontADD_10102024_01",
+        "LargeDoors_10152024_01",
+        "LargeGlass_10152024_01"
     ]
 
     for name in names:
