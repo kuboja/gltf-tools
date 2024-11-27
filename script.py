@@ -54,13 +54,9 @@ def split_to_level(base_glb_path, name, temp_folder, level, stop_level):
         return split_to_level(file, name, temp_folder, level + 1, stop_level)
     
 
-def runName(name):
+def runName(basePath, output_folder, name):
 
-    # Příklad použití
-    basePath = "..\\"
-    output_folder = os.path.join(basePath, "output\\", name)
-
-    # Zajištění výstupního adresáře
+    output_folder = os.path.join(output_folder, name)
     os.makedirs(output_folder, exist_ok=True)
 
     glb_path = os.path.join(basePath, name + ".glb")
@@ -71,6 +67,8 @@ def runName(name):
 
     print("Splited files:")
     print(splited_files)
+
+    files = []
 
     i = 1
     for file in splited_files:
@@ -93,6 +91,8 @@ def runName(name):
         final_txt = final_name + "_size.txt"
         final_png = final_name + ".png"
 
+        files.append(final_glb)
+
         # copy final file
         shutil.copy(final_file, final_glb)
         shutil.copy(file.replace(".glb", "_size.txt"), final_txt)
@@ -101,10 +101,23 @@ def runName(name):
 
         i += 1
 
+    return files
+
 
 
 if __name__ == "__main__":
     
+    basePath = "..\\"
+    output_folder = os.path.join(basePath, "output")
+    
+    # Zajištění výstupního adresáře
+    os.makedirs(output_folder, exist_ok=True)
+
+    output_files_file_path = os.path.join(output_folder, "all_models.txt")
+
+    # save generated file paths to txt file
+    with open(output_files_file_path, "w") as file:
+        file.write("")
 
     names = [
         "ExteriorAccessories_10152024_01",
@@ -121,5 +134,11 @@ if __name__ == "__main__":
     ]
 
     for name in names:
-        runName(name)
+        files = runName(basePath, output_folder, name)
+
+        with open(output_files_file_path, "a") as file:
+            for f in files:
+                file.write(f + "\n")
+            file.write("\n")
+
 
