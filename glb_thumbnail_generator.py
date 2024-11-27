@@ -82,10 +82,11 @@ def generate_thumbnail(glb_path, output_path, width=400, height=300):
     renderer.delete()
 
 
-def call_thumbnail_generator(glb_path, output_path, width=400, height=300):
+def call_thumbnail_generator(glb_path, output_path, width=512, height=512):
     if (output_path is None):
         output_path = os.path.splitext(glb_path)[0] + '.png'
 
+    # https://github.com/bwasty/gltf-viewer
     result = subprocess.run([
         'gltf-viewer.exe',
         glb_path,
@@ -99,12 +100,35 @@ def call_thumbnail_generator(glb_path, output_path, width=400, height=300):
 
     return output_path
 
+def call_histruct_renderer(glb_path, output_path, width=512, height=512):
+    if (output_path is None):
+        output_path = os.path.splitext(glb_path)[0] + '.png'
+
+    # https://github.com/bwasty/gltf-viewer
+    result = subprocess.run([
+        r"D:\github\HiStructClient\fcs-histruct\Apps\FCS.Apps.Renderer\bin\Debug\net9.0\FCS.Apps.Renderer.exe",
+        glb_path,
+        output_path,
+        str(height),
+        str(width),
+        "o",
+        "znxpyn"
+    ], capture_output=True, text=True)
+
+    print(result.args)
+    print(result.stderr)
+    print(result.stdout)
+
+    return output_path
+
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2:
-        print("Použití: python glb_thumbnail_generator.py <cesta k GLB souboru>")
-    else:
-        glb_path = sys.argv[1]
-        output_path = os.path.splitext(glb_path)[0] + '.png'
-        call_thumbnail_generator(glb_path, output_path)
-        #generate_thumbnail(glb_path, output_path)
+    a = r"..\output\LargeDoors_10152024_01\LargeDoors_10152024_01_level2-2.glb"
+
+    glb_path = (len(sys.argv) > 1 and sys.argv[1]) or a
+
+    output_path = os.path.splitext(glb_path)[0] + '.png'
+    output_path = 'test.png'
+
+    # call_thumbnail_generator(glb_path, output_path)
+    call_histruct_renderer(glb_path, output_path)
