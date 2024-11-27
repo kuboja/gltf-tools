@@ -1,7 +1,7 @@
 from pygltflib import GLTF2
 import os
 from attributes import remove_normals
-from glb_thumbnail_generator import call_thumbnail_generator
+from glb_thumbnail_generator import call_histruct_renderer, call_thumbnail_generator
 from align import align_glb_to_center
 from optimize import clean_gltf, optimize_buffers, remove_empty_nodes
 from split import split_glb_by_root_nodes
@@ -75,14 +75,17 @@ def runName(name):
     i = 1
     for file in splited_files:
 
-        clean_file = clean(file)
+        align_file = align_glb_to_center(file, None, [0, 1, 0])
+        clean_file = clean(align_file)
         optimalized_file = image_optimize(clean_file)
-        final_file = align_glb_to_center(optimalized_file, None, [0, 1, 0])
+
+        thumbnail_file = optimalized_file
+        final_file = optimalized_file
 
         if final_file is None:
             continue
         
-        thumnail_path = call_thumbnail_generator(clean_file, None, 512, 512)
+        thumnail_path = call_histruct_renderer(thumbnail_file, None, 512, 512)
 
         # mode final file to output folder, replace all after "-" with index
         final_name = os.path.join( output_folder, os.path.basename(final_file).split("-")[0] + "-" + str(i))
@@ -92,7 +95,7 @@ def runName(name):
 
         # copy final file
         shutil.copy(final_file, final_glb)
-        shutil.copy(optimalized_file.replace(".glb", "_size.txt"), final_txt)
+        shutil.copy(file.replace(".glb", "_size.txt"), final_txt)
         if os.path.exists(thumnail_path):
             shutil.copy(thumnail_path, final_png)
 
